@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Hysteria Bot
 
 Безопасный Telegram-бот для управления Hysteria 2 с моделью `deny by default`.
@@ -591,3 +592,7 @@ chown root:hysteria /etc/hysteria/config.yaml
 chmod 640 /etc/hysteria/config.yaml
 systemctl restart hysteria-server
 ```
+=======
+# hysteria-bot-manager
+Telegram-бот для управления Hysteria 2
+>>>>>>> 0559173d7007d6b4acec44b21503dbd9f1703e1f
