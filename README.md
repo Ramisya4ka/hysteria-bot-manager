@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Hysteria Bot
 
 Безопасный Telegram-бот для управления Hysteria 2 с моделью `deny by default`.
