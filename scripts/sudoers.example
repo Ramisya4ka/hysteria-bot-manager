@@ -1,0 +1,6 @@
+Cmnd_Alias HYSTERIA_BOT_HELPER = /usr/local/bin/hysteria-admin-helper status --db /opt/hysteria-bot/data/hysteria-bot.sqlite --service hysteria-server, \
+    /usr/local/bin/hysteria-admin-helper logs --service hysteria-server --lines *, \
+    /usr/local/bin/hysteria-admin-helper apply --db /opt/hysteria-bot/data/hysteria-bot.sqlite --config-out /etc/hysteria/config.yaml --service hysteria-server --validator-bin /usr/bin/hysteria, \
+    /usr/local/bin/hysteria-admin-helper restart --service hysteria-server
+
+hysteria-bot ALL=(root) NOPASSWD: HYSTERIA_BOT_HELPER

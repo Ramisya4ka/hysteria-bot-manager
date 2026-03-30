@@ -1,0 +1,21 @@
+services:
+  hysteria-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hysteria-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_PATH: /app/data/hysteria-bot.sqlite
+      HOST_HELPER_MODE: unix-http
+      HOST_HELPER_SOCKET_PATH: /var/run/hysteria-bot/helper.sock
+    volumes:
+      - ./data:/app/data
+      - ./run:/var/run/hysteria-bot
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

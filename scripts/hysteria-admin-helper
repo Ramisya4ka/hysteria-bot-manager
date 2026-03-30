@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/env node /opt/hysteria-bot/scripts/hysteria-admin-helper.mjs "$@"

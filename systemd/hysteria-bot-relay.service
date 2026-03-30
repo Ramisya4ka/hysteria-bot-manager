@@ -1,0 +1,18 @@
+[Unit]
+Description=Hysteria Bot Host Relay
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/bots-project/hysteria-bot
+Environment=HYSTERIA_HELPER_PATH=/opt/bots-project/hysteria-bot/scripts/hysteria-admin-helper
+Environment=HYSTERIA_HELPER_SOCKET_PATH=/opt/bots-project/hysteria-bot/run/helper.sock
+ExecStart=/usr/bin/env node /opt/bots-project/hysteria-bot/scripts/hysteria-admin-relay.mjs
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
