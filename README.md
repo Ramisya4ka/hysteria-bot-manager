@@ -101,7 +101,7 @@ systemctl cat hysteria-server
 
 ```bash
 cd /opt/bots-project
-git clone <repo-url> hysteria-bot
+git clone https://github.com/Ramisya4ka/hysteria-bot-manager.git
 cd /opt/bots-project/hysteria-bot
 cp .env.example .env
 nano .env
@@ -153,7 +153,7 @@ bash scripts/check.sh
 
 ```bash
 cd /opt/bots-project
-git clone <repo-url> hysteria-bot
+git clone https://github.com/Ramisya4ka/hysteria-bot-manager.git
 cd /opt/bots-project/hysteria-bot
 ```
 
@@ -182,7 +182,7 @@ rm -rf node_modules
 npm ci
 ```
 
-То же самое делает [scripts/install-host.sh](/f:/Worckspace_visual/hysteria-bot/scripts/install-host.sh).
+То же самое делает [scripts/install-host.sh]
 
 ### 4. Создание `.env`
 
