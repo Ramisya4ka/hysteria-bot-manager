@@ -18,6 +18,7 @@ Telegram-бот для управления Hysteria 2 с моделью `deny b
 - enable / disable пользователя
 - удаление пользователя с подтверждением
 - генерация `hy2://` URI
+- генерация QR-кода для `hy2://` URI
 - `/logs`
 - `/restart` с подтверждением
 - `/apply` с подтверждением
@@ -444,6 +445,18 @@ journalctl -u hysteria-server -n 50 --no-pager
 - применить конфиг
 - прислать URI
 
+### QR-код настроек
+
+В списке пользователей рядом с `URI` есть кнопка `QR`.
+
+Что она делает:
+
+- генерирует QR-код из `hy2://` URI
+- отправляет PNG в Telegram только allowlisted админу
+- не пишет сам URI или пароль в audit log
+
+Это удобно для быстрого подключения клиента с телефона.
+
 ## Audit log
 
 Проверка последних действий:
@@ -452,6 +465,40 @@ journalctl -u hysteria-server -n 50 --no-pager
 sqlite3 /opt/bots-project/hysteria-bot/data/hysteria-bot.sqlite \
   "select id,timestamp,admin_telegram_id,action,success,message from audit_logs order by id desc limit 30;"
 ```
+
+## Обновление проекта
+
+Обычное обновление кода и перезапуск контейнера **не должны удалять пользователей**, если каталог `data/` сохранён.
+
+Почему:
+
+- пользователи и настройки хранятся в SQLite
+- SQLite лежит в bind mount `./data`
+- `docker compose build` и `docker compose up -d` пересобирают контейнер, но не стирают `./data`
+
+Безопасный порядок обновления:
+
+```bash
+cp /etc/hysteria/config.yaml /etc/hysteria/config.yaml.manual-backup.$(date +%F-%H%M%S)
+cd /opt/bots-project/hysteria-bot
+npm ci
+docker compose build
+docker compose up -d
+```
+
+После обновления полезно проверить:
+
+```bash
+sqlite3 /opt/bots-project/hysteria-bot/data/hysteria-bot.sqlite "select username,enabled from hysteria_users order by username;"
+echo '---'
+cd /opt/bots-project/hysteria-bot && docker compose logs --since=2m
+```
+
+Когда пользователи могут потеряться:
+
+- если удалить каталог `data/`
+- если заменить или повредить файл SQLite
+- если пропустить backup и вручную перетереть live config, а потом синхронизировать неверные данные обратно
 
 ## Полезные команды
 

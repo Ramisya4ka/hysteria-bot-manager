@@ -1,4 +1,5 @@
-import type { Bot } from "grammy";
+import { InputFile, type Bot } from "grammy";
+import QRCode from "qrcode";
 import type { BotContext } from "../types/context";
 import { usersKeyboard } from "../utils/keyboards";
 
@@ -107,6 +108,36 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
     ctx.services.audit.log({
       adminTelegramId: String(ctx.from!.id),
       action: "user_uri",
+      payload: { userId, username: user.username },
+      success: true,
+    });
+  });
+
+  bot.callbackQuery(/^user:qr:(\d+)$/, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    const userId = Number(ctx.match[1]);
+    const user = ctx.services.users.getById(userId);
+    const settings = ctx.services.settings.get();
+
+    if (!user || !settings) {
+      await ctx.reply("User or settings not found.");
+      return;
+    }
+
+    const uri = ctx.services.uri.build(user, settings);
+    const qrBuffer = await QRCode.toBuffer(uri, {
+      type: "png",
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: 512,
+    });
+
+    await ctx.replyWithPhoto(new InputFile(qrBuffer, `${user.username}.png`), {
+      caption: `QR for ${user.username}`,
+    });
+    ctx.services.audit.log({
+      adminTelegramId: String(ctx.from!.id),
+      action: "user_qr",
       payload: { userId, username: user.username },
       success: true,
     });

@@ -20,6 +20,8 @@ export function usersKeyboard(users: HysteriaUser[]): InlineKeyboard {
     const toggleLabel = user.enabled ? "Disable" : "Enable";
     keyboard
       .text(`URI ${user.username}`, `user:uri:${user.id}`)
+      .text(`QR ${user.username}`, `user:qr:${user.id}`)
+      .row()
       .text(`${toggleLabel} ${user.username}`, `user:toggle:${user.id}`)
       .row()
       .text(`Delete ${user.username}`, `user:delete:${user.id}`)

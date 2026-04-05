@@ -12,12 +12,14 @@
   "dependencies": {
     "better-sqlite3": "^11.8.1",
     "grammy": "^1.38.3",
+    "qrcode": "^1.5.4",
     "yaml": "^2.8.1",
     "zod": "^4.1.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.6.0",
+    "@types/qrcode": "^1.5.5",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
