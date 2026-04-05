@@ -37,6 +37,22 @@ export function userDetailsKeyboard(user: HysteriaUser): InlineKeyboard {
     .text("Home", "menu:home");
 }
 
+export function userUriKeyboard(user: HysteriaUser): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("QR", `user:qr:${user.id}`)
+    .row()
+    .text("Back", `user:view:${user.id}`)
+    .text("Home", "menu:home");
+}
+
+export function userQrKeyboard(user: HysteriaUser): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("URI", `user:uri:${user.id}`)
+    .row()
+    .text("Back", `user:view:${user.id}`)
+    .text("Home", "menu:home");
+}
+
 export function screenNavKeyboard(backCallback = "menu:home"): InlineKeyboard {
   return new InlineKeyboard().text("Back", backCallback).text("Home", "menu:home");
 }

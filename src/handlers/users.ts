@@ -1,8 +1,8 @@
 import { InputFile, type Bot } from "grammy";
 import QRCode from "qrcode";
 import type { BotContext } from "../types/context";
-import { flowCancelKeyboard, userDetailsKeyboard, usersKeyboard } from "../utils/keyboards";
-import { renderScreen } from "../utils/screen";
+import { flowCancelKeyboard, userDetailsKeyboard, userQrKeyboard, userUriKeyboard, usersKeyboard } from "../utils/keyboards";
+import { renderPhotoScreen, renderScreen } from "../utils/screen";
 
 function usersListText(ctx: BotContext): string {
   const users = ctx.services.users.listAll();
@@ -32,6 +32,40 @@ async function renderUserDetails(ctx: BotContext, userId: number): Promise<void>
   ].join("\n");
 
   await renderScreen(ctx, text, userDetailsKeyboard(user));
+}
+
+async function renderUserUri(ctx: BotContext, userId: number): Promise<void> {
+  const user = ctx.services.users.getById(userId);
+  const settings = ctx.services.settings.get();
+
+  if (!user || !settings) {
+    await renderUsersList(ctx);
+    return;
+  }
+
+  const uri = ctx.services.uri.build(user, settings);
+  const text = [`Connection URI`, "", user.username, "", uri].join("\n");
+  await renderScreen(ctx, text, userUriKeyboard(user));
+}
+
+async function renderUserQr(ctx: BotContext, userId: number): Promise<void> {
+  const user = ctx.services.users.getById(userId);
+  const settings = ctx.services.settings.get();
+
+  if (!user || !settings) {
+    await renderUsersList(ctx);
+    return;
+  }
+
+  const uri = ctx.services.uri.build(user, settings);
+  const qrBuffer = await QRCode.toBuffer(uri, {
+    type: "png",
+    errorCorrectionLevel: "M",
+    margin: 2,
+    width: 512,
+  });
+
+  await renderPhotoScreen(ctx, qrBuffer, `${user.username}.png`, `QR for ${user.username}`, userQrKeyboard(user));
 }
 
 async function applyWithRollback(
@@ -120,15 +154,11 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
   bot.callbackQuery(/^user:uri:(\d+)$/, async (ctx) => {
     await ctx.answerCallbackQuery();
     const userId = Number(ctx.match[1]);
+    await renderUserUri(ctx, userId);
     const user = ctx.services.users.getById(userId);
-    const settings = ctx.services.settings.get();
-
-    if (!user || !settings) {
-      await ctx.reply("User or settings not found.");
+    if (!user) {
       return;
     }
-
-    await ctx.reply(ctx.services.uri.build(user, settings));
     ctx.services.audit.log({
       adminTelegramId: String(ctx.from!.id),
       action: "user_uri",
@@ -140,25 +170,11 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
   bot.callbackQuery(/^user:qr:(\d+)$/, async (ctx) => {
     await ctx.answerCallbackQuery();
     const userId = Number(ctx.match[1]);
+    await renderUserQr(ctx, userId);
     const user = ctx.services.users.getById(userId);
-    const settings = ctx.services.settings.get();
-
-    if (!user || !settings) {
-      await ctx.reply("User or settings not found.");
+    if (!user) {
       return;
     }
-
-    const uri = ctx.services.uri.build(user, settings);
-    const qrBuffer = await QRCode.toBuffer(uri, {
-      type: "png",
-      errorCorrectionLevel: "M",
-      margin: 2,
-      width: 512,
-    });
-
-    await ctx.replyWithPhoto(new InputFile(qrBuffer, `${user.username}.png`), {
-      caption: `QR for ${user.username}`,
-    });
     ctx.services.audit.log({
       adminTelegramId: String(ctx.from!.id),
       action: "user_qr",
@@ -264,9 +280,8 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
       await renderUsersList(ctx);
 
       const created = ctx.services.users.getByUsername(draft.username);
-      const settings = ctx.services.settings.get();
-      if (created && settings) {
-        await ctx.reply(ctx.services.uri.build(created, settings));
+      if (created) {
+        await renderUserUri(ctx, created.id);
       }
       return;
     }
