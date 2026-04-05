@@ -12,6 +12,7 @@ import type { BotContext } from "./types/context";
 import { initialSessionData } from "./types/session";
 import type { ServiceContainer } from "./utils/service-container";
 import { mainMenuKeyboard } from "./utils/keyboards";
+import { renderScreen } from "./utils/screen";
 
 export function createBot(services: ServiceContainer): Bot<BotContext> {
   const bot = new Bot<BotContext>(services.env.BOT_TOKEN);
@@ -54,9 +55,7 @@ export function createBot(services: ServiceContainer): Bot<BotContext> {
   registerActionsHandler(bot);
 
   bot.command("menu", async (ctx) => {
-    await ctx.reply("Menu", {
-      reply_markup: mainMenuKeyboard(),
-    });
+    await renderScreen(ctx, "Hysteria 2 Admin", mainMenuKeyboard());
   });
 
   return bot;

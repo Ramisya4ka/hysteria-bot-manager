@@ -8,6 +8,9 @@ export interface AddUserDraft {
 }
 
 export interface SessionData {
+  ui: {
+    screenMessageId: number | null;
+  };
   flow:
     | {
         type: "add-user";
@@ -18,5 +21,8 @@ export interface SessionData {
 }
 
 export const initialSessionData = (): SessionData => ({
+  ui: {
+    screenMessageId: null,
+  },
   flow: null,
 });

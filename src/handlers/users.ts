@@ -1,24 +1,37 @@
 import { InputFile, type Bot } from "grammy";
 import QRCode from "qrcode";
 import type { BotContext } from "../types/context";
-import { usersKeyboard } from "../utils/keyboards";
+import { flowCancelKeyboard, userDetailsKeyboard, usersKeyboard } from "../utils/keyboards";
+import { renderScreen } from "../utils/screen";
 
 function usersListText(ctx: BotContext): string {
   const users = ctx.services.users.listAll();
   if (users.length === 0) {
-    return "No users";
+    return "Users\n\nNo users";
   }
 
-  return users
-    .map((user) => `- ${user.username} (${user.enabled ? "enabled" : "disabled"})${user.note ? ` | ${user.note}` : ""}`)
-    .join("\n");
+  return ["Users", "", ...users.map((user) => `- ${user.username} (${user.enabled ? "enabled" : "disabled"})`)].join("\n");
 }
 
 async function renderUsersList(ctx: BotContext): Promise<void> {
   const users = ctx.services.users.listAll();
-  await ctx.reply(usersListText(ctx), {
-    reply_markup: usersKeyboard(users),
-  });
+  await renderScreen(ctx, usersListText(ctx), usersKeyboard(users));
+}
+
+async function renderUserDetails(ctx: BotContext, userId: number): Promise<void> {
+  const user = ctx.services.users.getById(userId);
+  if (!user) {
+    await renderUsersList(ctx);
+    return;
+  }
+
+  const text = [
+    `User: ${user.username}`,
+    `State: ${user.enabled ? "enabled" : "disabled"}`,
+    `Note: ${user.note ?? "-"}`,
+  ].join("\n");
+
+  await renderScreen(ctx, text, userDetailsKeyboard(user));
 }
 
 async function applyWithRollback(
@@ -90,7 +103,18 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
       step: "username",
       draft: {},
     };
-    await ctx.reply("Enter username:");
+    await renderScreen(ctx, "Add User\n\nStep 1/4\nSend username.", flowCancelKeyboard());
+  });
+
+  bot.callbackQuery("flow:cancel", async (ctx) => {
+    await ctx.answerCallbackQuery({ text: "Cancelled" });
+    ctx.session.flow = null;
+    await renderUsersList(ctx);
+  });
+
+  bot.callbackQuery(/^user:view:(\d+)$/, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await renderUserDetails(ctx, Number(ctx.match[1]));
   });
 
   bot.callbackQuery(/^user:uri:(\d+)$/, async (ctx) => {
@@ -161,6 +185,7 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
       { userId, username: user.username, enabled: nextState },
       `User ${user.username} ${nextState ? "enabled" : "disabled"}.`,
     );
+    await renderUserDetails(ctx, userId);
   });
 
   bot.on("message:text", async (ctx, next) => {
@@ -182,7 +207,7 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
       }
       ctx.session.flow.draft.username = text;
       ctx.session.flow.step = "password";
-      await ctx.reply("Enter password:");
+      await renderScreen(ctx, "Add User\n\nStep 2/4\nSend password.", flowCancelKeyboard());
       return;
     }
 
@@ -193,14 +218,14 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
       }
       ctx.session.flow.draft.password = text;
       ctx.session.flow.step = "note";
-      await ctx.reply("Enter note or `-` for empty:");
+      await renderScreen(ctx, "Add User\n\nStep 3/4\nSend note or `-` for empty.", flowCancelKeyboard());
       return;
     }
 
     if (ctx.session.flow.step === "note") {
       ctx.session.flow.draft.note = text === "-" ? null : text;
       ctx.session.flow.step = "enabled";
-      await ctx.reply("Enable user now? Reply yes/no:");
+      await renderScreen(ctx, "Add User\n\nStep 4/4\nEnable user now? Reply yes/no.", flowCancelKeyboard());
       return;
     }
 
@@ -235,6 +260,8 @@ export function registerUsersHandler(bot: Bot<BotContext>): void {
         { username: draft.username, enabled: draft.enabled },
         "User created and config applied.",
       );
+
+      await renderUsersList(ctx);
 
       const created = ctx.services.users.getByUsername(draft.username);
       const settings = ctx.services.settings.get();

@@ -1,5 +1,7 @@
 import type { Bot } from "grammy";
 import type { BotContext } from "../types/context";
+import { screenNavKeyboard } from "../utils/keyboards";
+import { renderScreen } from "../utils/screen";
 
 function formatStatus(status: {
   service: string;
@@ -22,7 +24,7 @@ function formatStatus(status: {
 export function registerStatusHandler(bot: Bot<BotContext>): void {
   const render = async (ctx: BotContext): Promise<void> => {
     const status = await ctx.services.hysteriaService.status();
-    await ctx.reply(formatStatus(status));
+    await renderScreen(ctx, `Hysteria Status\n\n${formatStatus(status)}`, screenNavKeyboard());
     ctx.services.audit.log({
       adminTelegramId: String(ctx.from!.id),
       action: "status",

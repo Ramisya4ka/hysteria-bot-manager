@@ -1,5 +1,7 @@
 import type { Bot } from "grammy";
 import type { BotContext } from "../types/context";
+import { screenNavKeyboard } from "../utils/keyboards";
+import { renderScreen } from "../utils/screen";
 
 function formatSettings(ctx: BotContext): string {
   const settings = ctx.services.settings.get();
@@ -21,7 +23,7 @@ function formatSettings(ctx: BotContext): string {
 
 export function registerSettingsHandler(bot: Bot<BotContext>): void {
   const render = async (ctx: BotContext): Promise<void> => {
-    await ctx.reply(formatSettings(ctx));
+    await renderScreen(ctx, `Server Settings\n\n${formatSettings(ctx)}`, screenNavKeyboard());
     ctx.services.audit.log({
       adminTelegramId: String(ctx.from!.id),
       action: "settings",
